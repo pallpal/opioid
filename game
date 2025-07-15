@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Opioid Titration Game: Pain control</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2em auto; }
+    .panel { border: 1px solid #ccc; border-radius: 8px; padding: 1em; margin-bottom: 1em; }
+    button { margin-top: 1em; }
+    .win { color: green; }
+    .lose { color: red; }
+    .warn { color: orange; }
+  </style>
+</head>
+<body>
+  <h1>Opioid Titration Game</h1>
+  <div class="panel" id="patient-info"></div>
+  <div class="panel" id="status"></div>
+  <div class="panel" id="actions"></div>
+  <script>
+    // Patient details
+    const patient = {
+      name: "Alan Lim",
+      age: 58,
+      weight: 75,
+      diagnosis: "Metastatic lung cancer for BSC",
+      comorbids: "Hypertension",
+      pain: 8, // out of 10
+      pain over RHC worsening over past few weeks, latest CT scan last week showed worsening liver mets. Saw oncologist, now for BSC.
+      Still having pain despite PO tramadol 50mg BD.
+    };
+    let round = 1;
+    let opioid = "tramadol";
+    let totalTramadol = 0;
+    let tramadolDose = 0;
+    let morphineDose = 0;
+    let totalMorphine = 0;
+    let switched = false;
+    let gameOver = false;
+
+    function renderPatient() {
+      document.getElementById("patient-info").innerHTML = `
+        <b>Patient:</b> ${patient.name}<br>
+        <b>Age:</b> ${patient.age} years<br>
+        <b>Weight:</b> ${patient.weight} kg<br>
+        <b>Diagnosis:</b> ${patient.diagnosis}<br>
+        <b>Comorbidities:</b> ${patient.comorbids}
+      `;
+    }
+
+    function renderStatus(msg="") {
+      let status = `
+        <b>Round:</b> ${round}<br>
+        <b>Current Opioid:</b> ${opioid === "tramadol" ? "Oral Tramadol" : "Oral Morphine"}<br>
+        <b>Pain Score:</b> ${patient.pain.toFixed(1)} / 10<br>
+        <b>Sedation:</b> ${patient.sedation.toFixed(1)} / 10<br>
+        <b>Respiratory Rate:</b> ${patient.resp.toFixed(1)} /min<br>
+      `;
+      if (opioid === "tramadol") {
+        status += `<b>Total Tramadol given:</b> ${totalTramadol} mg`;
+      } else {
+        status += `<b>Total Morphine given:</b> ${totalMorphine} mg`;
+      }
+      if (msg) status += `<br><span class='warn'>${msg}</span>`;
+      document.getElementById("status").innerHTML = status;
+    }
+
+    function renderActions() {
+      let actions = '';
+      if (gameOver) {
+        actions = `<button onclick="location.reload()">Restart Game</button>`;
+      } else if (opioid === "tramadol") {
+        actions = `
+          <label>Enter oral tramadol dose for this round (mg): 
+            <input id="tramadolDose" type="number" min="0" max="400" step="50" value="50">
+          </label>
+          <button onclick="giveTramadol()">Administer</button>
+        `;
+        if (round > 2 && patient.pain > 5) {
+          actions += `<br><button onclick="switchToMorphine()">Switch to Morphine</button>`;
+        }
+      } else if (opioid === "morphine") {
+        actions = `
+          <label>Enter oral morphine dose for this round (mg): 
+            <input id="morphineDose" type="number" min="0" max="60" step="5" value="${morphineDose}">
+          </label>
+          <button onclick="giveMorphine()">Administer</button>
+        `;
+      }
+      document.getElementById("actions").innerHTML = actions;
+    }
+
+    function giveTramadol() {
+      if (gameOver) return;
+      tramadolDose = Number(document.getElementById('tramadolDose').value);
+      if (tramadolDose < 0 || tramadolDose > 400) {
+        renderStatus("Invalid dose. Tramadol max 400mg per day.");
+        return;
+      }
+      totalTramadol += tramadolDose;
+      // Simulate effects
+      const painReduction = tramadolDose * (Math.random() * 0.03 + 0.07); // 7-10% reduction per 50mg
+      patient.pain = Math.max(0, patient.pain - painReduction);
+      patient.sedation += tramadolDose * (Math.random() * 0.01 + 0.02);
+      patient.resp -= tramadolDose * (Math.random() * 0.005 + 0.01);
+
+      checkState();
+    }
+
+    function giveMorphine() {
+      if (gameOver) return;
+      morphineDose = Number(document.getElementById('morphineDose').value);
+      if (morphineDose < 0 || morphineDose > 60) {
+        renderStatus("Invalid dose. Morphine max 60mg per day.");
+        return;
+      }
+      totalMorphine += morphineDose;
+      // Simulate effects
+      const painReduction = morphineDose * (Math.random() * 0.12 + 0.18); // 18-30% reduction per 10mg
+      patient.pain = Math.max(0, patient.pain - painReduction);
+      patient.sedation += morphineDose * (Math.random() * 0.03 + 0.05);
+      patient.resp -= morphineDose * (Math.random() * 0.01 + 0.02);
+
+      checkState();
+    }
+
+    function switchToMorphine() {
+      if (gameOver || switched) return;
+      opioid = "morphine";
+      switched = true;
+      // Conversion: total tramadol / 5 = total morphine
+      morphineDose = Math.round(totalTramadol / 5);
+      renderStatus(`Switching to morphine. Calculated starting dose: ${morphineDose} mg/day`);
+      renderActions();
+    }
+
+    function checkState() {
+      round++;
+      // Check for win/lose conditions
+      if (patient.resp < 8) {
+        gameOver = true;
+        renderStatus("Patient has respiratory depression. Game over! ⚠️");
+        renderActions();
+        return;
+      }
+      if (patient.sedation > 8) {
+        gameOver = true;
+        renderStatus("Patient is over-sedated. Game over! ⚠️");
+        renderActions();
+        return;
+      }
+      if (patient.pain <= 3) {
+        gameOver = true;
+        renderStatus("Pain is controlled! You win! 🎉");
+        renderActions();
+        return;
+      }
+      if (opioid === "tramadol" && totalTramadol > 400) {
+        gameOver = true;
+        renderStatus("Exceeded safe tramadol dose. Game over!");
+        renderActions();
+        return;
+      }
+      if (opioid === "morphine" && totalMorphine > 60) {
+        gameOver = true;
+        renderStatus("Exceeded safe morphine dose. Game over!");
+        renderActions();
+        return;
+      }
+      renderStatus();
+      renderActions();
+    }
+
+    // Initial render
+    renderPatient();
+    renderStatus();
+    renderActions();
+  </script>
+</body>
+</html>
