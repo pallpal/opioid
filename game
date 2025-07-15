@@ -27,7 +27,8 @@
       comorbids: "Hypertension",
       pain: 8, // out of 10
       pain over RHC worsening over past few weeks, latest CT scan last week showed worsening liver mets. Saw oncologist, now for BSC.
-      Still having pain despite PO tramadol 50mg BD.
+      Taking PO tramadol 50mg every time pain comes, about 3x/day and PO paracetamol 1g QDS.
+      He's just been admitted and asking for better pain relief, what do you do?
     };
     let round = 1;
     let opioid = "tramadol";
