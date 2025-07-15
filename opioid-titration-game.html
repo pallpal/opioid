@@ -26,9 +26,9 @@
       diagnosis: "Metastatic lung cancer for BSC",
       comorbids: "Hypertension",
       pain: 8, // out of 10
-      pain over RHC worsening over past few weeks, latest CT scan last week showed worsening liver mets. Saw oncologist, now for BSC.
-      Taking PO tramadol 50mg every time pain comes, about 3x/day and PO paracetamol 1g QDS.
-      He's just been admitted and asking for better pain relief, what do you do?
+      history: pain over RHC worsening over past few weeks, latest CT scan last week showed worsening liver mets. Saw oncologist, now for BSC.
+      analgesia history: Taking PO tramadol 50mg every time pain comes, about 3x/day and PO paracetamol 1g QDS.
+      question: He's just been admitted and asking for better pain relief, what do you do?
     };
     let round = 1;
     let opioid = "tramadol";
@@ -45,7 +45,8 @@
         <b>Age:</b> ${patient.age} years<br>
         <b>Weight:</b> ${patient.weight} kg<br>
         <b>Diagnosis:</b> ${patient.diagnosis}<br>
-        <b>Comorbidities:</b> ${patient.comorbids}
+        <b>Comorbidities:</b> ${patient.comorbids}<br>
+        <b>history:</b> ${patient.history}
       `;
     }
 
